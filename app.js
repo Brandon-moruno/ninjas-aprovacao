@@ -37,19 +37,26 @@
         <input type="range" min="0" max="100" value="50" aria-label="Comparar antes e depois: ${esc(t)}">
       </div><figcaption>${esc(t)}</figcaption></figure>`).join('')
     $$('input', el).forEach(i => i.addEventListener('input', () => i.parentElement.style.setProperty('--x', i.value + '%')))
-    // varre sozinho enquanto esta na tela; para de vez quando a pessoa mexe
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    // arrasta em qualquer ponto da foto (o range nativo no iPhone so responde na bolinha);
+    // sem reduced-motion, a linha varre sozinha e volta a varrer 2,5s depois que a pessoa solta
+    const auto = !matchMedia('(prefers-reduced-motion: reduce)').matches
     $$('.ad', el).forEach((ad, k) => {
-      const inp = $('input', ad); let vis = false, parado = false, t0 = null
+      const inp = $('input', ad); let vis = false, mexendo = false, arrasto = false, t0 = null, x = 50, volta
+      const por = v => { x = Math.max(0, Math.min(100, v)); ad.style.setProperty('--x', x.toFixed(1) + '%'); inp.value = x }
+      const mexeu = () => { mexendo = true; t0 = null; clearTimeout(volta); volta = setTimeout(() => { mexendo = false }, 2500) }
+      const mover = e => { const r = ad.getBoundingClientRect(); por((e.clientX - r.left) / r.width * 100) }
+      ad.addEventListener('pointerdown', e => { arrasto = true; ad.setPointerCapture(e.pointerId); mexeu(); mover(e) })
+      ad.addEventListener('pointermove', e => { if (arrasto) { mexeu(); mover(e) } })
+      ad.addEventListener('pointerup', () => { arrasto = false })
+      ad.addEventListener('pointercancel', () => { arrasto = false })
+      inp.addEventListener('input', mexeu)
+      if (!auto) return
       new IntersectionObserver(([e]) => { vis = e.isIntersecting }).observe(ad)
-      ad.addEventListener('pointerdown', () => { parado = true }, { once: true })
-      inp.addEventListener('keydown', () => { parado = true }, { once: true })
       const passo = t => {
-        if (parado) return
-        if (vis) {
-          if (t0 === null) t0 = t - k * 900
-          const x = 50 + 38 * Math.sin((t - t0) / 1400)
-          ad.style.setProperty('--x', x.toFixed(1) + '%'); inp.value = x
+        if (vis && !mexendo) {
+          // retoma do ponto onde a pessoa deixou a linha
+          if (t0 === null) t0 = t - 1400 * Math.asin(Math.max(-1, Math.min(1, (x - 50) / 38))) - (x === 50 && k ? k * 900 : 0)
+          por(50 + 38 * Math.sin((t - t0) / 1400))
         }
         requestAnimationFrame(passo)
       }

@@ -37,12 +37,12 @@ button, input { font: inherit; color: inherit; }
 
 /* antes e depois */
 .ad-item { margin: 0; }
-.ad { position: relative; aspect-ratio: 4 / 5; overflow: hidden; border-radius: var(--raio-foto); user-select: none; }
+.ad { position: relative; aspect-ratio: 4 / 5; overflow: hidden; border-radius: var(--raio-foto); user-select: none; touch-action: pan-y; cursor: ew-resize; }
 .ad img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .ad-depois { clip-path: inset(0 0 0 var(--x)); }
 .ad-linha { position: absolute; top: 0; bottom: 0; left: var(--x); width: 2px; margin-left: -1px; background: var(--acc); pointer-events: none; }
 .ad-linha::after { content: '‹ ›'; position: absolute; top: 50%; left: 50%; translate: -50% -50%; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: var(--acc); color: var(--sobre-acc); font-size: 18px; letter-spacing: 2px; }
-.ad input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; }
+.ad input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; pointer-events: none; }
 .ad-tag { position: absolute; top: 12px; padding: 3px 10px; border-radius: 99px; font-size: 12px; background: rgb(0 0 0 / .55); color: #fff; pointer-events: none; }
 .ad-tag-a { left: 12px; } .ad-tag-d { right: 12px; }
 .ad-item figcaption { margin-top: 12px; color: var(--mudo); font-size: 15px; }
