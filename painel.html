@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Ninja's Barbershop · Painel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+  :root {
+    --bg: #0c0c0b; --fg: #ece6da; --mudo: #9a9387; --linha: #2c2a26; --card: rgb(20 19 17 / .82); --sel: #2a2418;
+    --acc: #c9a86a; --sobre-acc: #14110b; --barra: rgb(12 12 11 / .9);
+    --f-titulo: 'Cinzel', serif; --f-corpo: 'Instrument Sans', system-ui, sans-serif;
+    --raio: 4px; --raio-btn: 2px; --raio-foto: 2px;
+  }
+  body { min-height: 100vh; }
+  /* fundo: a loja desfocada, como no painel da AP */
+  .fundo { position: fixed; inset: 0; z-index: -1; }
+  .fundo img { width: 100%; height: 100%; object-fit: cover; filter: blur(28px) grayscale(.6) brightness(.35); transform: scale(1.1); }
+  .fundo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(rgb(12 12 11 / .55), rgb(12 12 11 / .92) 60%, var(--bg)); }
+  h1, h2, h3 { font-family: var(--f-titulo); font-weight: 600; letter-spacing: .03em; margin: 0; }
+  button { cursor: pointer; }
+  .caixa { background: var(--card); border: 1px solid var(--linha); padding: 22px; backdrop-filter: blur(10px); }
+  .caixa > h2 { font-size: 18px; margin-bottom: 16px; }
+  .caixa > h2 small { display: block; margin-top: 6px; font: 400 14px/1.4 var(--f-corpo); letter-spacing: 0; color: var(--mudo); }
+  .pilulas { display: inline-flex; border: 1px solid var(--linha); padding: 3px; gap: 2px; background: rgb(0 0 0 / .3); }
+  .pilulas button { background: none; border: 0; padding: 7px 14px; color: var(--mudo); font-size: 14px; }
+  .pilulas button.on { background: var(--acc); color: var(--sobre-acc); font-weight: 600; }
+  .bt { background: none; border: 1px solid var(--acc); color: var(--acc); padding: 7px 14px; font-size: 14px; font-weight: 600; }
+  .bt:hover { background: var(--acc); color: var(--sobre-acc); }
+  .bt-mudo { border-color: var(--linha); color: var(--mudo); font-weight: 400; }
+  .bt-mudo:hover { background: none; color: var(--fg); border-color: var(--mudo); }
+  .etq { display: inline-block; padding: 1px 7px; font-size: 11px; letter-spacing: .08em; border: 1px solid var(--acc); color: var(--acc); vertical-align: 2px; }
+  .etq-cinza { border-color: var(--linha); color: var(--mudo); }
+  .lista { list-style: none; margin: 0; padding: 0; }
+  .lista li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--linha); }
+  .lista li:last-child { border-bottom: 0; }
+  .lista .dir { margin-left: auto; text-align: right; color: var(--mudo); font-size: 14px; }
+  .lista b { font-weight: 600; }
+  .lista small { display: block; color: var(--mudo); font-size: 13px; }
+  .num { font: 600 30px/1 var(--f-titulo); }
+
+  /* logo animado (mesmo do site) */
+  .logo-anim { display: block; width: 100%; height: auto; overflow: visible; }
+  .logo-anim path { transform-box: fill-box; animation: .9s cubic-bezier(.2, .7, .2, 1) both; }
+  .la-linha { transform-origin: center; animation-name: la-abre !important; animation-delay: .2s !important; }
+  .la-l1 { animation-name: la-desce !important; animation-delay: calc(.5s + var(--i) * .07s) !important; }
+  .la-traco { transform-origin: calc(100% - var(--i) * 100%) 50%; animation-name: la-abre !important; animation-delay: 1s !important; }
+  .la-l2 { animation-name: la-surge !important; animation-delay: calc(1.05s + var(--i) * .035s) !important; }
+  @keyframes la-abre { from { transform: scaleX(0); } }
+  @keyframes la-desce { from { opacity: 0; transform: translateY(-35%); } }
+  @keyframes la-surge { from { opacity: 0; transform: translateY(14px); } }
+  @media (prefers-reduced-motion: reduce) { .logo-anim path { animation: none !important; } }
+
+  /* entrada */
+  .entrada { min-height: 100vh; display: grid; place-content: center; padding: 40px 16px; width: min(720px, 100%); margin-inline: auto; }
+  .entrada .marca { width: min(300px, 70vw); margin: 0 auto 48px; color: var(--fg); }
+  .entrada h1 { font-size: 26px; text-align: center; margin-bottom: 26px; }
+  .perfis { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .perfil { display: flex; align-items: center; gap: 14px; padding: 18px; text-align: left; background: var(--card); border: 1px solid var(--linha); transition: border-color .2s; }
+  .perfil:hover { border-color: var(--acc); }
+  .perfil small { display: block; color: var(--mudo); font-size: 13px; }
+  .entrada p { margin: 22px 0 0; text-align: center; color: var(--mudo); font-size: 14px; }
+
+  /* casca */
+  .casca { width: min(1240px, 100% - 32px); margin-inline: auto; padding: 24px 0 140px; }
+  .cabeca { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; }
+  .cabeca .eq-mono { width: 48px; height: 48px; font-size: 16px; }
+  .cabeca h1 { font-size: clamp(20px, 3vw, 28px); }
+  .cabeca p { margin: 2px 0 0; color: var(--mudo); font-size: 14px; }
+  .cabeca .eu { margin-right: auto; }
+  .cabeca .links { display: flex; gap: 16px; font-size: 14px; }
+  .cabeca .links a, .cabeca .links button { color: var(--mudo); background: none; border: 0; padding: 0; text-decoration: none; }
+  .cabeca .links a:hover, .cabeca .links button:hover { color: var(--fg); }
+  .conteudo { margin-top: 26px; animation: entra .35s ease both; }
+  @keyframes entra { from { opacity: 0; transform: translateY(8px); } }
+  .abas { position: fixed; z-index: 30; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); translate: -50% 0; display: flex; gap: 2px; padding: 4px; background: rgb(14 13 12 / .92); border: 1px solid var(--linha); backdrop-filter: blur(16px); box-shadow: 0 20px 40px -10px #000; }
+  .abas button { background: none; border: 0; padding: 11px 20px; color: var(--mudo); font-size: 14px; }
+  .abas button.on { background: var(--acc); color: var(--sobre-acc); font-weight: 600; }
+  .aviso-demo { margin-top: 36px; color: rgb(255 255 255 / .3); font-size: 12px; }
+  .grade2 { display: grid; gap: 16px; grid-template-columns: 340px 1fr; align-items: start; }
+  .col { display: grid; gap: 16px; }
+  @media (max-width: 900px) { .grade2 { grid-template-columns: 1fr; } }
+
+  /* calendário */
+  .cal-topo { display: flex; align-items: center; margin-bottom: 12px; }
+  .cal-topo h2 { font-size: 17px; margin-right: auto; }
+  .cal-topo button { background: none; border: 0; color: var(--mudo); font-size: 20px; padding: 0 8px; }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+  .cal span { font-size: 12px; color: var(--mudo); padding-bottom: 4px; }
+  .cal button { background: none; border: 1px solid transparent; padding: 6px 0; color: var(--fg); line-height: 1.15; }
+  .cal button small { display: block; font-size: 10px; color: var(--mudo); }
+  .cal button:hover { border-color: var(--linha); }
+  .cal button.hoje { border-color: var(--linha); }
+  .cal button.sel { background: var(--acc); color: var(--sobre-acc); }
+  .cal button.sel small { color: var(--sobre-acc); }
+  .cal button:disabled { color: rgb(255 255 255 / .2); cursor: default; border-color: transparent; }
+  .resumo-dia { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .resumo-dia div { font-size: 13px; color: var(--mudo); }
+  .resumo-dia b { display: block; margin-top: 4px; font: 600 26px/1 var(--f-titulo); color: var(--fg); }
+  .resumo-dia .ouro b { color: var(--acc); }
+
+  /* grade do dia */
+  .dia { overflow-x: auto; padding: 0; }
+  .dia-cab, .dia-corpo { display: grid; grid-template-columns: 56px repeat(var(--n), minmax(220px, 1fr)); min-width: min-content; }
+  .dia-cab { position: sticky; top: 0; z-index: 2; border-bottom: 1px solid var(--linha); background: rgb(16 15 14 / .96); }
+  .dia-cab div { display: flex; align-items: center; gap: 10px; padding: 12px; font-size: 14px; }
+  .dia-cab .eq-mono { width: 30px; height: 30px; font-size: 11px; }
+  .dia-corpo { position: relative; grid-template-rows: repeat(var(--linhas), 48px); }
+  .hora { grid-column: 1; font-size: 12px; color: var(--mudo); padding: 0 0 0 12px; border-top: 1px solid var(--linha); }
+  .hora.meia { border-top-color: rgb(255 255 255 / .03); }
+  .linha-faixa { grid-column: 2 / -1; border-top: 1px solid var(--linha); }
+  .linha-faixa.meia { border-top-color: rgb(255 255 255 / .03); }
+  .bloco { position: relative; z-index: 1; margin: 2px 6px; padding: 7px 10px; border: 1px solid var(--linha); border-left: 2px solid var(--acc); background: rgb(30 27 22 / .95); text-align: left; color: var(--fg); overflow: hidden; display: flex; flex-direction: column; gap: 2px; font-size: 13px; transition: border-color .2s, transform .2s; }
+  .bloco:hover { border-color: var(--acc); }
+  .bloco b { font-size: 14px; font-weight: 600; display: flex; gap: 6px; align-items: center; }
+  .bloco span { color: var(--mudo); }
+  .bloco.curto { flex-direction: row; align-items: center; gap: 8px; white-space: nowrap; }
+  .bloco.curto span { overflow: hidden; text-overflow: ellipsis; }
+  .bloco.atendido { border-left-color: #6f8f62; background: rgb(22 22 19 / .9); }
+  .bloco.faltou { border-left-color: #a2584a; opacity: .7; }
+  .bloco.faltou b { text-decoration: line-through; }
+  .agora { position: absolute; left: 56px; right: 0; height: 0; border-top: 1px solid #e06d4f; z-index: 3; pointer-events: none; }
+  .agora::before { content: ''; position: absolute; left: -4px; top: -4px; width: 7px; height: 7px; border-radius: 50%; background: #e06d4f; }
+  .fechado { padding: 40px; text-align: center; color: var(--mudo); }
+
+  /* ficha */
+  dialog { width: min(480px, calc(100% - 24px)); max-height: calc(100% - 24px); padding: 0; border: 1px solid var(--linha); background: #121110; color: var(--fg); }
+  dialog::backdrop { background: rgb(0 0 0 / .7); backdrop-filter: blur(3px); }
+  dialog[open] { animation: entra .25s ease both; }
+  .ficha { padding: 24px; }
+  .ficha header { display: flex; align-items: start; gap: 12px; margin-bottom: 16px; }
+  .ficha header h2 { font-size: 22px; }
+  .ficha header p { margin: 4px 0 0; color: var(--mudo); font-size: 14px; }
+  .ficha .fechar { margin-left: auto; background: none; border: 0; color: var(--mudo); font-size: 24px; line-height: 1; }
+  .ficha dl div { display: flex; justify-content: space-between; gap: 16px; padding: 9px 0; border-bottom: 1px solid var(--linha); font-size: 14px; }
+  .ficha .acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .ficha h3 { font: 600 13px/1 var(--f-corpo); letter-spacing: .12em; color: var(--mudo); margin: 22px 0 10px; text-transform: uppercase; }
+  .ficha .ag-zap { margin-top: 12px; }
+
+  /* clientes / lembretes */
+  .grade3 { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); align-items: start; }
+  .busca { width: 100%; padding: 11px 14px; margin-bottom: 8px; background: rgb(0 0 0 / .3); border: 1px solid var(--linha); color: var(--fg); }
+  .busca:focus { outline: none; border-color: var(--acc); }
+  .tabela { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .tabela th { text-align: left; font-weight: 400; color: var(--mudo); padding: 10px 8px 10px 0; border-bottom: 1px solid var(--linha); }
+  .tabela td { padding: 11px 8px 11px 0; border-bottom: 1px solid rgb(255 255 255 / .05); }
+  .tabela tr[data-cli] { cursor: pointer; }
+  .tabela tr[data-cli]:hover td { color: var(--acc); }
+  .tabela .r { text-align: right; padding-right: 0; }
+  .lem { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); margin-top: 16px; }
+  .lem article { padding: 18px; border: 1px solid var(--linha); background: var(--card); }
+  .lem article.chamar { border-color: rgb(201 168 106 / .6); }
+  .lem h3 { font: 600 16px/1.2 var(--f-corpo); letter-spacing: 0; display: flex; justify-content: space-between; gap: 8px; }
+  .lem p { margin: 8px 0 14px; color: var(--mudo); font-size: 14px; }
+
+  /* finanças / relatórios */
+  .barra-topo { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+  .destaques { display: grid; gap: 16px; grid-template-columns: 1.4fr 1fr 1fr; margin-bottom: 16px; }
+  .destaques .principal { background: linear-gradient(135deg, rgb(201 168 106 / .16), rgb(20 19 17 / .85) 70%); border-color: rgb(201 168 106 / .45); }
+  .destaques p { margin: 0 0 10px; color: var(--mudo); font-size: 14px; }
+  .destaques .principal .num { font-size: 40px; color: var(--acc); }
+  .destaques small { display: block; margin-top: 8px; color: var(--mudo); font-size: 13px; }
+  @media (max-width: 760px) { .destaques { grid-template-columns: 1fr 1fr; } .destaques .principal { grid-column: 1 / -1; } }
+  .colunas { display: flex; align-items: end; gap: 3px; height: 180px; padding-top: 10px; }
+  .colunas div { flex: 1; min-width: 0; background: var(--acc); opacity: .85; transform-origin: bottom; animation: cresce .7s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i) * 15ms); }
+  .colunas div.zero { background: var(--linha); height: 2px !important; }
+  .colunas div:hover { opacity: 1; }
+  .eixo { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--mudo); }
+  @keyframes cresce { from { transform: scaleY(0); } }
+  .barras li { display: block; padding: 10px 0; border: 0; }
+  .barras .t { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 7px; }
+  .barras .t span { color: var(--mudo); }
+  .barras .t b { color: var(--fg); font-weight: 600; }
+  .trilho { height: 6px; background: rgb(255 255 255 / .06); }
+  .trilho i { display: block; height: 100%; background: var(--acc); transform-origin: left; animation: abre .8s cubic-bezier(.2, .7, .2, 1) both; }
+  @keyframes abre { from { transform: scaleX(0); } }
+  .funil li .trilho { height: 26px; }
+  .funil li .trilho i { display: flex; align-items: center; padding-left: 10px; font-style: normal; font-size: 13px; font-weight: 600; color: var(--sobre-acc); }
+
+  /* gráficos (mesmos do painel da AP) */
+  .g-21, .g-11 { display: grid; gap: 16px; align-items: start; margin-top: 16px; }
+  .g-21 { grid-template-columns: 2fr 1fr; } .g-11 { grid-template-columns: 1fr 1fr; }
+  .destaques { grid-template-columns: repeat(3, 1fr); margin-bottom: 0; }
+  .sobe { color: #e2c58c; } .desce { color: var(--fg); }
+  .graf { margin-top: 4px; }
+  .graf-area { position: relative; height: 224px; padding-left: 64px; }
+  .graf-linha { position: absolute; left: 64px; right: 0; border-top: 1px solid rgb(255 255 255 / .07); }
+  .graf-linha span { position: absolute; left: -64px; width: 56px; translate: 0 -50%; text-align: right; font-size: 11px; color: var(--mudo); }
+  .graf-barras { position: relative; display: flex; align-items: end; gap: 2px; height: 100%; }
+  .graf-col { position: relative; flex: 1; min-width: 0; height: 100%; display: flex; align-items: end; }
+  .graf-b { width: 100%; background: var(--acc); border-radius: 2px 2px 0 0; transform-origin: bottom; animation: cresce .7s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i) * 18ms); transition: background .15s; }
+  .graf-col:hover .graf-b { background: #e2c58c; }
+  .graf-dica { display: none; position: absolute; left: 50%; translate: -50% 0; z-index: 5; padding: 6px 10px; white-space: nowrap; font-size: 12px; background: #1b1a17; border: 1px solid var(--linha); pointer-events: none; }
+  .graf-col:hover .graf-dica { display: block; }
+  .graf-col:first-child .graf-dica { left: 0; translate: 0 0; } .graf-col:last-child .graf-dica { left: auto; right: 0; translate: 0 0; }
+  .graf-rot { display: flex; gap: 2px; padding-left: 64px; margin-top: 8px; font-size: 11px; color: var(--mudo); }
+  .graf-rot span { flex: 1; min-width: 0; text-align: center; overflow: visible; white-space: nowrap; }
+  .hbar { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 10px; font-size: 14px; }
+  .hbar li { display: grid; grid-template-columns: 11rem 1fr 3rem; align-items: center; gap: 12px; }
+  .hbar li > span:first-child { color: var(--mudo); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hbar .trilho { height: 8px; } .hbar b { text-align: right; font-weight: 500; }
+  .medidor { position: relative; width: 96px; height: 96px; flex: none; margin-left: auto; }
+  .medidor svg { width: 100%; height: 100%; display: block; }
+  .medidor div { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+  .medidor b { font: 600 24px/1 var(--f-titulo); } .medidor small { margin-top: 4px; font-size: 10px; letter-spacing: .1em; color: var(--mudo); }
+  .med-on circle { animation: arco 1.1s cubic-bezier(.2, .7, .2, 1) both .15s; }
+  @keyframes arco { from { stroke-dasharray: 0 252; } }
+  .cartoes { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-top: 14px; }
+  .cartao-pro { display: flex; align-items: center; gap: 14px; }
+  .cartao-pro .eq-mono { width: 56px; height: 56px; }
+  .cartao-pro h3 { font-size: 19px; } .cartao-pro p { margin: 4px 0 0; color: var(--mudo); font-size: 14px; }
+  .dl { margin: 14px 0 0; font-size: 14px; }
+  .dl div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--linha); }
+  .dl div:last-child { border-bottom: 0; } .dl dt { color: var(--mudo); } .dl dd { margin: 0; }
+  .sub { font-size: 21px; margin-top: 32px; }
+  .nota { max-width: 680px; margin: 14px 0 0; padding: 12px 16px; border: 1px solid rgb(201 168 106 / .3); background: rgb(201 168 106 / .07); color: var(--mudo); font-size: 14px; }
+  .principal-rel { background: linear-gradient(135deg, rgb(201 168 106 / .16), rgb(20 19 17 / .85) 70%); border-color: rgb(201 168 106 / .45); }
+  .filtros { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-top: 4px; }
+  .filtros + .filtros { margin-top: 12px; }
+  .filtros label { display: grid; gap: 6px; font-size: 14px; color: var(--mudo); }
+  .filtros select, .filtros input { padding: 10px 12px; background: rgb(0 0 0 / .35); border: 1px solid var(--linha); color: var(--fg); font: inherit; color-scheme: dark; }
+  .filtros select:focus, .filtros input:focus { outline: none; border-color: var(--acc); }
+  @media (max-width: 900px) { .g-21, .g-11 { grid-template-columns: 1fr; } }
+  @media (max-width: 640px) { .so-largo { display: none; } .hbar li { grid-template-columns: 7.5rem 1fr 2.5rem; } .destaques { grid-template-columns: 1fr 1fr; } .graf-area, .graf-rot { padding-left: 52px; } .graf-linha { left: 52px; } .graf-linha span { left: -52px; width: 46px; } }
+
+  @media (max-width: 760px) {
+    .casca { padding-top: 18px; }
+    .abas { width: calc(100% - 20px); display: grid; grid-template-columns: repeat(5, 1fr); }
+    .abas button { padding: 11px 2px; font-size: 12.5px; }
+    .caixa { padding: 18px; }
+    .dia-cab, .dia-corpo { grid-template-columns: 48px repeat(var(--n), minmax(200px, 1fr)); }
+    .agora { left: 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="fundo" aria-hidden="true"><img src="fotos/hero-loja.jpg" alt=""></div>
+<div id="app"></div>
+<dialog id="ficha"></dialog>
+
+<script src="dados.js"></script>
+<script>
+(function () {
+  var D = window.NINJAS, app = document.getElementById('app'), ficha = document.getElementById('ficha');
+  // cerca de 400 clientes fictícios, para cada um voltar a cada poucas semanas como na vida real
+  var CLIS = [];
+  ['Lucas', 'Gabriel', 'Mateus', 'Pedro', 'Caio', 'Felipe', 'João', 'Thiago', 'Enzo', 'Bruno', 'Vinícius', 'Gustavo', 'Henrique', 'Leonardo', 'Daniel', 'Murilo', 'Arthur', 'Camila', 'Larissa', 'Beatriz', 'Samuel', 'Otávio', 'Igor', 'Davi', 'Rafael', 'Diego', 'André', 'Marcos', 'Renan', 'Yuri', 'Júlia', 'Heitor', 'Bernardo', 'Lorenzo'].forEach(function (n, i) {
+    'ABCDFGLMNOPRSTV'.split('').forEach(function (l, j) { if ((i + j) % 5) CLIS.push(n + ' ' + l + '.'); });
+  });
+  var MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  var SEM = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+  var agora = new Date(), HOJE = iso(agora), MIN_AGORA = agora.getHours() * 60 + agora.getMinutes();
+  var exHoje = window.NINJAS.expediente[agora.getDay()];
+  if (!exHoje || MIN_AGORA < exHoje[0] * 60 || MIN_AGORA >= exHoje[1] * 60) MIN_AGORA = 15 * 60 + 20; // ponytail: fora do expediente a demo finge 15h20 para a agenda ter atendidos e pendentes
+  var st = { perfil: null, aba: 'agenda', quem: 'eu', dia: HOJE, mes: new Date(agora.getFullYear(), agora.getMonth(), 1), periodo: 'mes', rel: { per: 'mes', pro: 'todos', tipo: 'todos', de: null, ate: null }, filtroLem: 'todos', busca: '' };
+  var marcados = {}; // mudanças feitas na demo (atendido / faltou)
+
+  function iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function dt(s) { return new Date(s + 'T12:00'); }
+  function addDias(s, n) { var d = dt(s); d.setDate(d.getDate() + n); return iso(d); }
+  function rnd(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); h ^= h >>> 13; h = Math.imul(h, 2246822507); h ^= h >>> 16; return (h >>> 0) / 4294967296; }
+  function hh(m) { var h = Math.floor(m / 60), r = m % 60; return String(h).padStart(2, '0') + 'h' + (r ? String(r).padStart(2, '0') : ''); }
+  function rs(v) { return 'R$ ' + v.toLocaleString('pt-BR'); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function pro(id) { return D.equipe.find(function (p) { return p.id === id; }); }
+  function mono(p) { return '<span class="eq-mono">' + p.nome.split(' ').map(function (x) { return x[0]; }).join('').slice(0, 2) + '</span>'; }
+  function dataCurta(s) { var d = dt(s); return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'); }
+  function zap(cli) { var n = 1000 + Math.floor(rnd('tel' + cli) * 8999); return '(15) 9 9' + String(Math.floor(rnd('t2' + cli) * 900) + 100) + '-' + n; }
+
+  // agenda simulada e determinística: o mesmo dia sempre gera os mesmos horários
+  var cache = {};
+  function agendaDe(dia, p) {
+    var k = dia + p; if (cache[k]) return cache[k];
+    var ex = D.expediente[dt(dia).getDay()], out = [];
+    if (ex && dia <= addDias(HOJE, 45)) {
+      var svcs = D.servicos.filter(function (s) { return s.preco && s.pros.indexOf(p) >= 0; });
+      var futuro = dia > HOJE, t = ex[0] * 60;
+      while (t < ex[1] * 60) {
+        var semente = dia + p + t;
+        if (rnd(semente) < (futuro ? .58 - Math.min(.4, (dt(dia) - dt(HOJE)) / 864e5 * .02) : .6)) {
+          var s = svcs[Math.floor(rnd('s' + semente) * svcs.length)], dur = Math.ceil(s.min / 30) * 30;
+          if (t + dur > ex[1] * 60) break;
+          var cli = CLIS[Math.floor(rnd('c' + semente) * CLIS.length)];
+          out.push({ id: semente, dia: dia, pro: p, ini: t, fim: t + dur, svc: s, cli: cli, novo: rnd('n' + semente) < .2, rec: rnd('r' + semente) < .14, falta: rnd('f' + semente) < .07 });
+          t += dur;
+        } else t += 30;
+      }
+    }
+    return (cache[k] = out);
+  }
+  function estado(h) {
+    if (marcados[h.id]) return marcados[h.id];
+    if (h.dia < HOJE || (h.dia === HOJE && h.fim <= MIN_AGORA)) return h.falta ? 'faltou' : 'atendido';
+    return 'marcado';
+  }
+  function prosVis() { return st.quem === 'eu' ? [st.perfil] : D.equipe.map(function (p) { return p.id; }); }
+  // histórico de cada cliente nos últimos 120 dias, para Clientes, Lembretes e ficha
+  var hist = null;
+  function historico() {
+    if (hist) return hist;
+    hist = {};
+    for (var d = addDias(HOJE, -120); d <= HOJE; d = addDias(d, 1)) D.equipe.forEach(function (eq) { var p = eq.id;
+      agendaDe(d, p).forEach(function (h) {
+        if (estado(h) !== 'atendido') return;
+        var c = hist[h.cli] || (hist[h.cli] = { nome: h.cli, visitas: 0, gasto: 0, ultima: d, pro: p });
+        c.visitas++; c.gasto += h.svc.preco; c.ultima = d; c.pro = p;
+      });
+    });
+    return hist;
+  }
+
+  /* ---------- telas ---------- */
+  function entrada() {
+    app.innerHTML = '<main class="entrada"><div class="marca" data-logo-anim></div><h1>Quem está entrando?</h1><div class="perfis">' +
+      D.equipe.map(function (p) { return '<button class="perfil" data-entrar="' + p.id + '">' + mono(p) + '<span><b>' + esc(p.nome) + '</b><small>' + esc(p.papel) + '</small></span></button>'; }).join('') +
+      '</div><p>Demonstração sem senha. Na versão final cada um entra com o próprio acesso.</p><p><a href="4-luz-de-led.html">Voltar ao site</a></p></main>';
+    var s = document.createElement('script'); s.src = 'logo-anim.js'; document.body.appendChild(s);
+  }
+
+  var ABAS = [['agenda', 'Agenda', 'Sua agenda'], ['clientes', 'Clientes', 'Clientes da barbearia'], ['lembretes', 'Lembretes', 'Central de lembretes'], ['financas', 'Finanças', 'Finanças'], ['relatorios', 'Relatórios', 'Relatórios']];
+  function casca() {
+    var eu = pro(st.perfil), dono = st.perfil === D.equipe[0].id, d = agora;
+    var sub = ABAS.find(function (a) { return a[0] === st.aba; })[2] + ' · hoje, ' + SEM[d.getDay()] + ', ' + d.getDate() + ' de ' + MESES[d.getMonth()];
+    var tela = { agenda: telaAgenda, clientes: telaClientes, lembretes: telaLembretes, financas: telaFinancas, relatorios: telaRelatorios }[st.aba]();
+    app.innerHTML = '<div class="casca"><header class="cabeca">' + mono(eu) + '<div class="eu"><h1>Bem-vindo, ' + esc(eu.nome.split(' ')[0]) + '</h1><p>' + sub + '</p></div>' +
+      (dono ? '<div class="pilulas">' + [['eu', 'Só eu'], ['todos', 'Barbearia']].map(function (q) { return '<button data-quem="' + q[0] + '" class="' + (st.quem === q[0] ? 'on' : '') + '">' + q[1] + '</button>'; }).join('') + '</div>' : '') +
+      '<div class="links"><button data-sair>Trocar perfil</button><a href="4-luz-de-led.html">Voltar ao site</a></div></header>' +
+      '<main class="conteudo">' + tela + '</main><p class="aviso-demo">Demonstração: clientes, valores e horários fictícios. Horários marcados pelo site aparecem com a marca NOVO.</p></div>' +
+      '<nav class="abas" aria-label="Abas do painel">' + ABAS.map(function (a) { return '<button data-aba="' + a[0] + '" class="' + (st.aba === a[0] ? 'on' : '') + '">' + a[1] + '</button>'; }).join('') + '</nav>';
+    var g = app.querySelector('.dia'); if (g) { var l = g.querySelector('.agora'); if (l) g.scrollTop = 0; }
+  }
+
+  function telaAgenda() {
+    var m = st.mes, ano = m.getFullYear(), mes = m.getMonth(), primeiro = new Date(ano, mes, 1).getDay(), ndias = new Date(ano, mes + 1, 0).getDate();
+    var cal = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(function (x) { return '<span>' + x + '</span>'; }).join('');
+    for (var i = 0; i < primeiro; i++) cal += '<i></i>';
+    for (var n = 1; n <= ndias; n++) {
+      var s = iso(new Date(ano, mes, n)), aberto = D.expediente[dt(s).getDay()], qt = 0;
+      prosVis().forEach(function (p) { qt += agendaDe(s, p).filter(function (h) { return estado(h) !== 'faltou'; }).length; });
+      cal += '<button data-dia="' + s + '" class="' + (s === st.dia ? 'sel ' : '') + (s === HOJE ? 'hoje' : '') + '"' + (aberto ? '' : ' disabled') + '>' + n + (aberto && qt ? '<small>' + qt + '</small>' : '<small>&nbsp;</small>') + '</button>';
+    }
+    var ex = D.expediente[dt(st.dia).getDay()], pros = prosVis(), hs = [];
+    pros.forEach(function (p) { hs = hs.concat(agendaDe(st.dia, p)); });
+    var ocup = 0, fat = 0, totalSlots = ex ? (ex[1] - ex[0]) * 2 * pros.length : 0;
+    hs.forEach(function (h) { if (estado(h) !== 'faltou') ocup += (h.fim - h.ini) / 30; if (estado(h) === 'atendido') fat += h.svc.preco; });
+    var rot = st.dia === HOJE ? 'Hoje' : SEM[dt(st.dia).getDay()].replace(/^./, function (c) { return c.toUpperCase(); }) + ', ' + dataCurta(st.dia);
+    var esq = '<div class="col"><section class="caixa"><div class="cal-topo"><h2>' + MESES[mes].replace(/^./, function (c) { return c.toUpperCase(); }) + ' de ' + ano + '</h2><button data-mes="-1" aria-label="Mês anterior">‹</button><button data-mes="1" aria-label="Próximo mês">›</button></div><div class="cal">' + cal + '</div></section>' +
+      '<section class="caixa"><h2>' + rot + '</h2><div class="resumo-dia"><div>Marcados<b>' + hs.filter(function (h) { return estado(h) !== 'faltou'; }).length + '</b></div><div>Livres<b>' + Math.max(0, totalSlots - ocup) + '</b></div><div class="ouro">Faturado<b>' + rs(fat) + '</b></div></div></section></div>';
+    if (!ex) return '<div class="grade2">' + esq + '<section class="caixa fechado">' + rot + ': fechado.</section></div>';
+    var linhas = (ex[1] - ex[0]) * 2, corpo = '';
+    for (var r = 0; r < linhas; r++) {
+      var meia = r % 2 ? ' meia' : '';
+      corpo += '<div class="hora' + meia + '" style="grid-row:' + (r + 1) + '">' + (r % 2 ? '' : hh(ex[0] * 60 + r * 30)) + '</div><div class="linha-faixa' + meia + '" style="grid-row:' + (r + 1) + '"></div>';
+    }
+    pros.forEach(function (p, c) {
+      agendaDe(st.dia, p).forEach(function (h) {
+        var e = estado(h), ini = (h.ini - ex[0] * 60) / 30 + 1;
+        var curto = h.fim - h.ini <= 30 ? ' curto' : '';
+        corpo += '<button class="bloco ' + e + curto + '" data-h="' + h.id + '" style="grid-column:' + (c + 2) + ';grid-row:' + ini + ' / span ' + (h.fim - h.ini) / 30 + '"><b>' + esc(h.cli) + (h.novo ? ' <span class="etq">NOVO</span>' : '') + (h.rec ? ' <span class="etq etq-cinza">RECORRENTE</span>' : '') + '</b><span>' + hh(h.ini) + ' · ' + esc(h.svc.nome) + ' · ' + rs(h.svc.preco) + (e === 'faltou' ? ' · não compareceu' : '') + '</span></button>';
+      });
+    });
+    if (st.dia === HOJE && MIN_AGORA > ex[0] * 60 && MIN_AGORA < ex[1] * 60) corpo += '<div class="agora" style="top:' + ((MIN_AGORA - ex[0] * 60) / 30 * 48) + 'px"></div>';
+    var cab = '<div></div>' + pros.map(function (p) { return '<div>' + mono(pro(p)) + esc(pro(p).nome.split(' ')[0]) + '</div>'; }).join('');
+    return '<div class="grade2">' + esq + '<section class="caixa dia" style="--n:' + pros.length + ';--linhas:' + linhas + '"><div class="dia-cab">' + cab + '</div><div class="dia-corpo">' + corpo + '</div></section></div>';
+  }
+
+  function telaClientes() {
+    var H = historico(), todos = Object.keys(H).map(function (k) { return H[k]; });
+    var aniv = CLIS.filter(function (c) { return rnd('aniv' + c) < .14; }).slice(0, 3).map(function (c, i) { return { nome: c, dia: addDias(HOJE, [0, 2, 5][i]) }; });
+    var sumidos = todos.filter(function (c) { return c.ultima < addDias(HOJE, -30); }).slice(0, 4);
+    if (sumidos.length < 3) sumidos = todos.slice().sort(function (a, b) { return a.ultima < b.ultima ? -1 : 1; }).slice(0, 4);
+    var q = st.busca.toLowerCase(), lista = todos.filter(function (c) { return c.nome.toLowerCase().indexOf(q) >= 0; }).sort(function (a, b) { return b.visitas - a.visitas; });
+    return '<div class="grade3"><section class="caixa"><h2>Aniversariantes da semana<small>Fazem aniversário de hoje até daqui a 6 dias. Só aparece quem informou a data.</small></h2><ul class="lista">' +
+      aniv.map(function (a) { return '<li><span><b>' + esc(a.nome) + '</b><small>' + (a.dia === HOJE ? 'Hoje' : SEM[dt(a.dia).getDay()] + ', ' + dataCurta(a.dia)) + '</small></span><button class="bt dir" data-msg="parabens" data-cli="' + esc(a.nome) + '">Parabéns</button></li>'; }).join('') + '</ul></section>' +
+      '<section class="caixa"><h2>Sumidos há 30 dias<small>Vieram pelo menos uma vez, a última há mais de 30 dias, e não têm nada marcado.</small></h2><ul class="lista">' +
+      sumidos.map(function (c) { return '<li><span><b>' + esc(c.nome) + '</b><small>Última vez em ' + dataCurta(c.ultima) + ' · ' + c.visitas + ' visitas</small></span><button class="bt dir" data-msg="volta" data-cli="' + esc(c.nome) + '">Chamar</button></li>'; }).join('') + '</ul></section></div>' +
+      '<section class="caixa" style="margin-top:16px"><h2>Clientes</h2><input class="busca" type="search" placeholder="Buscar por nome" value="' + esc(st.busca) + '" data-busca><table class="tabela"><thead><tr><th>Nome</th><th>Visitas</th><th>Última vez</th><th class="r">Gasto</th></tr></thead><tbody>' +
+      lista.slice(0, 30).map(function (c) { return '<tr data-cli="' + esc(c.nome) + '"><td>' + esc(c.nome) + '</td><td>' + c.visitas + '</td><td>' + dataCurta(c.ultima) + '</td><td class="r">' + rs(c.gasto) + '</td></tr>'; }).join('') +
+      (lista.length ? '' : '<tr><td colspan="4" class="mudo">Nenhum cliente encontrado.</td></tr>') + '</tbody></table>' + (lista.length > 30 ? '<p class="mudo" style="font-size:13px">Mostrando 30 de ' + lista.length + '. Use a busca para achar os outros.</p>' : '') + '</section>';
+  }
+
+  function lembretes() {
+    var H = historico();
+    return Object.keys(H).slice(0, 12).map(function (k, i) {
+      var c = H[k], freq = [15, 21, 30, 21, 45, 30][i % 6], prox = addDias(c.ultima, freq), falta = Math.round((dt(prox) - dt(HOJE)) / 864e5);
+      return { nome: c.nome, freq: freq, ultima: c.ultima, prox: prox, st: falta <= 2 ? 'chamar' : falta <= 7 ? 'breve' : 'dia', falta: falta };
+    }).sort(function (a, b) { return a.falta - b.falta; });
+  }
+  function telaLembretes() {
+    var L = lembretes(), rot = { chamar: 'Para chamar', breve: 'Em breve', dia: 'Em dia' };
+    var f = L.filter(function (l) { return st.filtroLem === 'todos' || l.st === st.filtroLem; });
+    return '<section class="caixa"><h2>Central de lembretes<small>Clientes que costumam voltar de tempos em tempos. Chame antes de passar da data.</small></h2>' +
+      '<div class="pilulas">' + [['todos', 'Todos'], ['chamar', 'Para chamar'], ['breve', 'Em breve'], ['dia', 'Em dia']].map(function (x) { var n = x[0] === 'todos' ? L.length : L.filter(function (l) { return l.st === x[0]; }).length; return '<button data-lem="' + x[0] + '" class="' + (st.filtroLem === x[0] ? 'on' : '') + '">' + x[1] + ' (' + n + ')</button>'; }).join('') + '</div>' +
+      '<div class="lem">' + f.map(function (l) {
+        return '<article class="' + (l.st === 'chamar' ? 'chamar' : '') + '"><h3>' + esc(l.nome) + '<span class="etq' + (l.st === 'chamar' ? '' : ' etq-cinza') + '">' + rot[l.st].toUpperCase() + '</span></h3><p>A cada ' + l.freq + ' dias · último em ' + dataCurta(l.ultima) + '<br>' + (l.falta < 0 ? 'Passou ' + -l.falta + ' dia(s) da data' : l.falta === 0 ? 'Volta prevista para hoje' : 'Volta prevista para ' + dataCurta(l.prox)) + '</p><button class="bt" data-msg="volta" data-cli="' + esc(l.nome) + '">Chamar no WhatsApp</button></article>';
+      }).join('') + '</div></section>';
+  }
+
+  function dias(de, ate) { var out = []; for (var d = de; d <= ate; d = addDias(d, 1)) out.push(d); return out; }
+  function itensDe(lista, pros) { var out = []; lista.forEach(function (d) { pros.forEach(function (p) { out = out.concat(agendaDe(d, p)); }); }); return out; }
+  function feitos(l) { return l.filter(function (h) { return estado(h) === 'atendido'; }); }
+  function soma(l) { return l.reduce(function (s, h) { return s + h.svc.preco; }, 0); }
+  function contar(l, chave) { var m = {}; l.forEach(function (h) { var k = chave(h); m[k] = (m[k] || 0) + 1; }); return Object.keys(m).map(function (k) { return { rot: k, q: m[k] }; }).sort(function (a, b) { return b.q - a.q; }); }
+  function agrupar(l, chave) { var m = {}; l.forEach(function (h) { var k = chave(h), x = m[k] || (m[k] = { nome: k, n: 0, v: 0 }); x.n++; x.v += h.svc.preco; }); return Object.keys(m).map(function (k) { return m[k]; }).sort(function (a, b) { return b.v - a.v; }); }
+  function pct(n) { return String(n).replace('.', ',') + '%'; }
+  function porServico(l) { return agrupar(l, function (h) { return h.svc.nome; }); }
+
+  // barras horizontais com o nome em cima (Finanças: por serviço)
+  function barras(itens, val, txt) {
+    var max = Math.max.apply(null, itens.map(val).concat(1));
+    return '<ul class="lista barras">' + itens.map(function (x) { return '<li><div class="t">' + txt(x) + '</div><div class="trilho"><i style="width:' + (val(x) / max * 100) + '%"></i></div></li>'; }).join('') + '</ul>';
+  }
+  // barras horizontais com o nome ao lado (Relatórios), igual ao painel da AP
+  function lista(dados) {
+    var max = Math.max.apply(null, dados.map(function (d) { return d.q; }).concat(1));
+    return '<ul class="hbar">' + dados.map(function (d) { return '<li><span>' + esc(d.rot) + '</span><span class="trilho"><i style="width:' + (d.q / max * 100) + '%"></i></span><b>' + d.q + '</b></li>'; }).join('') + '</ul>';
+  }
+  // colunas com eixo em R$ e dica ao passar o mouse
+  function grafico(dados) {
+    var max = Math.max.apply(null, dados.map(function (d) { return d.v; }).concat(1)), passo = Math.pow(10, Math.floor(Math.log10(max))) / 2, topo = Math.ceil(max / passo) * passo;
+    return '<div class="graf"><div class="graf-area">' + [0, .5, 1].map(function (f) { return '<div class="graf-linha" style="bottom:' + f * 100 + '%"><span>' + rs(Math.round(topo * f)) + '</span></div>'; }).join('') +
+      '<div class="graf-barras">' + dados.map(function (d, i) { var h = d.v / topo * 100; return '<div class="graf-col"><div class="graf-b" style="--i:' + i + ';height:' + h + '%"></div><div class="graf-dica" style="bottom:calc(' + h + '% + 8px)">' + d.dica + '</div></div>'; }).join('') + '</div></div>' +
+      '<div class="graf-rot">' + dados.map(function (d) { return '<span>' + (d.mostra ? d.rot : '') + '</span>'; }).join('') + '</div></div>';
+  }
+  // arco de 270 graus; o preenchido é a participação do profissional no total
+  function medidor(valor, fr) {
+    var C = 2 * Math.PI * 40, arco = C * .75;
+    function t(len, cor) { return '<circle cx="50" cy="50" r="40" fill="none" stroke="' + cor + '" stroke-width="8" stroke-dasharray="' + len + ' ' + C + '" transform="rotate(135 50 50)"/>'; }
+    return '<div class="medidor" role="img" aria-label="' + valor + ' atendimentos"><svg viewBox="0 0 100 100">' + t(arco, 'rgb(255 255 255 / .08)') + (fr > 0 ? '<g class="med-on">' + t(Math.max(arco * Math.min(fr, 1), 1), 'var(--acc)') + '</g>' : '') + '</svg><div><b>' + valor + '</b><small>ATEND.</small></div></div>';
+  }
+  function numero(titulo, valor, atual, antes, vs, destaque) {
+    var dif = antes ? Math.round((atual - antes) / antes * 100) : null;
+    return '<section class="caixa' + (destaque ? ' principal' : '') + '"><p>' + titulo + '</p><div class="num">' + valor + '</div><small>' + (dif === null ? 'Sem base de comparação' : '<span class="' + (dif >= 0 ? 'sobe' : 'desce') + '">' + (dif >= 0 ? '+' : '') + dif + '%</span> contra ' + vs) + '</small></section>';
+  }
+
+  // mesmos períodos e comparações do painel da AP
+  function periodoFin(t) {
+    if (t === 'hoje') return { de: HOJE, ate: HOJE, antDe: addDias(HOJE, -7), antAte: addDias(HOJE, -7), vs: 'mesmo dia da semana passada' };
+    if (t === '7') return { de: addDias(HOJE, -6), ate: HOJE, antDe: addDias(HOJE, -13), antAte: addDias(HOJE, -7), vs: '7 dias anteriores' };
+    var a = agora.getFullYear(), m = agora.getMonth(), ultAnt = new Date(a, m, 0).getDate();
+    return { de: iso(new Date(a, m, 1)), ate: HOJE, antDe: iso(new Date(a, m - 1, 1)), antAte: iso(new Date(a, m - 1, Math.min(agora.getDate(), ultAnt))), vs: 'mesmo período do mês passado' };
+  }
+  function efetivadosFin() { var p = periodoFin(st.periodo); return feitos(itensDe(dias(p.de, p.ate), prosVis())); }
+
+  function telaFinancas() {
+    var p = periodoFin(st.periodo), pros = prosVis(), bruto = itensDe(dias(p.de, p.ate), pros), at = feitos(bruto), ant = feitos(itensDe(dias(p.antDe, p.antAte), pros));
+    var faltas = bruto.filter(function (h) { return estado(h) === 'faltou'; }).length, fat = soma(at), fatAnt = soma(ant);
+    var tk = at.length ? Math.round(fat / at.length) : 0, tkAnt = ant.length ? Math.round(fatAnt / ant.length) : 0, cols = [];
+    if (st.periodo === 'hoje') {
+      var ex = D.expediente[agora.getDay()] || [9, 20];
+      for (var hr = ex[0]; hr < ex[1]; hr++) (function (hr) { var l = at.filter(function (h) { return Math.floor(h.ini / 60) === hr; }); cols.push({ v: soma(l), rot: hr + 'h', mostra: true, dica: hr + 'h: ' + rs(soma(l)) + ', ' + l.length + ' atend.' }); })(hr);
+    } else {
+      var n = st.periodo === '7' ? 7 : new Date(agora.getFullYear(), agora.getMonth() + 1, 0).getDate();
+      for (var i = 0; i < n; i++) (function (i) {
+        var d = addDias(p.de, i), l = at.filter(function (h) { return h.dia === d; }), sem = SEM[dt(d).getDay()].slice(0, 3);
+        cols.push({ v: soma(l), rot: st.periodo === '7' ? sem : String(dt(d).getDate()), mostra: st.periodo === '7' || i % 5 === 0, dica: sem + ', ' + dataCurta(d) + ': ' + (D.expediente[dt(d).getDay()] ? rs(soma(l)) + ', ' + l.length + ' atend.' : 'fechado') });
+      })(i);
+    }
+    var porPro = pros.length > 1 ? agrupar(at, function (h) { return pro(h.pro).nome; }) : [];
+    var melhores = agrupar(at, function (h) { return h.cli; }).slice(0, 5);
+    var recentes = at.slice().sort(function (a, b) { return a.dia + String(a.ini).padStart(4, '0') < b.dia + String(b.ini).padStart(4, '0') ? 1 : -1; });
+    var linhaNome = function (x) { return '<li><span>' + esc(x.nome) + '</span><span class="dir">' + x.n + 'x · <b style="color:var(--fg)">' + rs(x.v) + '</b></span></li>'; };
+    return '<div class="barra-topo"><div class="pilulas">' + [['hoje', 'Hoje'], ['7', '7 dias'], ['mes', 'Mês']].map(function (x) { return '<button data-periodo="' + x[0] + '" class="' + (st.periodo === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div><button class="bt bt-mudo" data-exportar>Exportar planilha</button></div>' +
+      '<div class="destaques">' + numero('Faturamento', rs(fat), fat, fatAnt, p.vs, true) + numero('Atendimentos', at.length, at.length, ant.length, p.vs) + numero('Ticket médio', rs(tk), tk, tkAnt, p.vs) + '</div>' +
+      '<div class="g-21"><section class="caixa"><h2>Receita ' + (st.periodo === 'hoje' ? 'por hora' : 'por dia') + '</h2>' + grafico(cols) + '</section>' +
+      '<section class="caixa"><h2>Por serviço</h2>' + (at.length ? barras(porServico(at), function (x) { return x.v; }, function (x) { return '<span>' + esc(x.nome) + '</span><b>' + x.n + 'x · ' + rs(x.v) + '</b>'; }) : '<p class="mudo">Nenhum atendimento efetivado ainda.</p>') + '</section></div>' +
+      '<div class="g-11">' + (porPro.length ? '<section class="caixa"><h2>Por profissional</h2><ul class="lista">' + porPro.map(linhaNome).join('') + '</ul></section>' : '') +
+      '<section class="caixa"><h2>Quem mais gastou</h2><ul class="lista">' + melhores.map(linhaNome).join('') + '</ul>' + (faltas ? '<p class="mudo" style="font-size:13px;margin:12px 0 0">' + faltas + (faltas === 1 ? ' cliente não compareceu' : ' clientes não compareceram') + ' no período.</p>' : '') + '</section></div>' +
+      '<section class="caixa" style="margin-top:16px"><h2>Atendimentos efetivados</h2><div style="overflow-x:auto"><table class="tabela"><thead><tr><th>Data</th><th>Cliente</th><th class="so-largo">Serviço</th>' + (pros.length > 1 ? '<th class="so-largo">Profissional</th>' : '') + '<th class="r">Valor</th></tr></thead><tbody>' +
+      recentes.slice(0, 10).map(function (h) { return '<tr><td class="mudo">' + dataCurta(h.dia) + ' ' + hh(h.ini) + '</td><td>' + esc(h.cli) + '</td><td class="so-largo">' + esc(h.svc.nome) + '</td>' + (pros.length > 1 ? '<td class="so-largo">' + esc(pro(h.pro).nome.split(' ')[0]) + '</td>' : '') + '<td class="r">' + rs(h.svc.preco) + '</td></tr>'; }).join('') +
+      '</tbody></table></div>' + (recentes.length > 10 ? '<p class="mudo" style="font-size:13px;margin:12px 0 0">Mostrando os 10 mais recentes de ' + recentes.length + '. A planilha traz todos.</p>' : '') + '</section>';
+  }
+
+  var PER_REL = [['mes', 'Este mês'], ['passado', 'Mês passado'], ['30', 'Últimos 30 dias'], ['prox', 'Próximos 30 dias'], ['custom', 'Personalizado']];
+  function datasRel() {
+    var t = st.rel.per, a = agora.getFullYear(), m = agora.getMonth();
+    if (t === 'mes') return [iso(new Date(a, m, 1)), iso(new Date(a, m + 1, 0))];
+    if (t === 'passado') return [iso(new Date(a, m - 1, 1)), iso(new Date(a, m, 0))];
+    if (t === '30') return [addDias(HOJE, -29), HOJE];
+    if (t === 'prox') return [HOJE, addDias(HOJE, 29)];
+    return [st.rel.de, st.rel.ate];
+  }
+  function relatorio(de, ate) {
+    var ids = st.rel.pro === 'todos' ? D.equipe.map(function (p) { return p.id; }) : [st.rel.pro];
+    var l = itensDe(dias(de, ate), ids).filter(function (h) { return st.rel.tipo === 'todos' || (st.rel.tipo === 'recorrente') === h.rec; });
+    var por = function (lst, e) { return lst.filter(function (h) { return estado(h) === e; }); };
+    // ponytail: cancelamento não existe na agenda simulada; a demo estima 5% sobre os ativos de cada profissional
+    var porPro = ids.map(function (id) {
+      var lp = l.filter(function (h) { return h.pro === id; }), canc = Math.round(lp.length * .05 + rnd(de + ate + id) * 2);
+      return { pro: id, ativos: lp.length, avulsos: lp.filter(function (h) { return !h.rec; }).length, recorrentes: lp.filter(function (h) { return h.rec; }).length, atendimentos: por(lp, 'atendido').length, faltas: por(lp, 'faltou').length, cancelados: canc, previsaoAvulsa: soma(por(lp, 'marcado').filter(function (h) { return !h.rec; })) };
+    });
+    var ativos = l.length, canc = porPro.reduce(function (s, p) { return s + p.cancelados; }, 0), total = ativos + canc;
+    porPro.forEach(function (p) { p.participacao = ativos ? Math.round(p.ativos / ativos * 1000) / 10 : 0; });
+    var fin = l.filter(function (h) { return h.novo; }).length;
+    return {
+      total: total, atendimentos: por(l, 'atendido').length, faltas: por(l, 'faltou').length, cancelados: canc, taxa: total ? Math.round(canc / total * 1000) / 10 : 0,
+      avulsos: l.filter(function (h) { return !h.rec; }).length, recorrentes: l.filter(function (h) { return h.rec; }).length, agendados: por(l, 'marcado').length,
+      faturamento: soma(por(l, 'atendido')), previsao: soma(por(l, 'marcado')), porPro: porPro,
+      funil: { acesso: Math.round(fin / .49), servico: Math.round(fin / .63), profissional: Math.round(fin / .71), horario: Math.round(fin / .85), finalizou: fin },
+      horarios: contar(l, function (h) { return hh(Math.floor(h.ini / 60) * 60); }).slice(0, 6),
+      servicos: contar(l, function (h) { return h.svc.nome; }).slice(0, 6),
+      dias: contar(l, function (h) { return h.dia; }).slice(0, 5).map(function (d) { return { rot: SEM[dt(d.rot).getDay()].slice(0, 3) + ', ' + dataCurta(d.rot), q: d.q }; }),
+      clientes: agrupar(por(l, 'atendido'), function (h) { return h.cli; }).sort(function (a, b) { return b.n - a.n; }).slice(0, 5),
+    };
+  }
+  function opcoes(lst, atual) { return lst.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === atual ? ' selected' : '') + '>' + o[1] + '</option>'; }).join(''); }
+  function telaRelatorios() {
+    var dono = st.perfil === D.equipe[0].id; if (!dono) st.rel.pro = st.perfil;
+    var dd = datasRel(), de = dd[0], ate = dd[1], ano = function (s) { return dataCurta(s) + '/' + s.slice(2, 4); };
+    var topo = '<section class="caixa"><h2>Relatórios</h2><div class="filtros"><label>Período<select data-rel="per">' + opcoes(PER_REL, st.rel.per) + '</select></label>' +
+      (dono ? '<label>Profissional<select data-rel="pro">' + opcoes([['todos', 'Todos']].concat(D.equipe.map(function (p) { return [p.id, p.nome]; })), st.rel.pro) + '</select></label>' : '') +
+      '<label>Tipo<select data-rel="tipo">' + opcoes([['todos', 'Avulsos e recorrentes'], ['avulso', 'Só avulsos'], ['recorrente', 'Só recorrentes']], st.rel.tipo) + '</select></label></div>' +
+      (st.rel.per === 'custom' ? '<div class="filtros"><label>Início<input type="date" data-rel="de" value="' + st.rel.de + '"></label><label>Fim<input type="date" data-rel="ate" value="' + st.rel.ate + '"></label></div>' : '') +
+      (de > ate ? '<p class="sobe" style="margin:12px 0 0;font-size:14px">A data final vem antes da inicial.</p>' : '<p class="mudo" style="margin:12px 0 0;font-size:12px">' + ano(de) + ' a ' + ano(ate) + '</p>') + '</section>';
+    if (de > ate) return topo;
+    var r = relatorio(de, ate);
+    if (!r.total) return topo + '<p class="mudo">Nenhum agendamento nesse período.</p>';
+    var dl = function (linhas) { return '<dl class="dl">' + linhas.map(function (x) { return '<div><dt>' + x[0] + '</dt><dd>' + x[1] + '</dd></div>'; }).join('') + '</dl>'; };
+    var cartoes = r.porPro.map(function (p) {
+      var e = pro(p.pro);
+      return '<section class="caixa"><div class="cartao-pro">' + mono(e) + '<div><h3>' + esc(e.nome) + '</h3><p>' + p.ativos + (p.ativos === 1 ? ' atendimento' : ' atendimentos') + ' no período filtrado</p></div>' + medidor(p.ativos, p.participacao / 100) + '</div>' +
+        dl([['Participação no período', pct(p.participacao)], ['Avulsos', p.avulsos], ['Recorrentes / pacotes', p.recorrentes], ['Concluídos', p.atendimentos], ['Não compareceram', p.faltas], ['Cancelados', p.cancelados], ['Previsão avulsa', rs(p.previsaoAvulsa)]]) + '</section>';
+    }).join('');
+    var f = r.funil, etapas = [['Abriram o agendamento', f.acesso], ['Escolheram o serviço', f.servico], ['Escolheram o profissional', f.profissional], ['Escolheram o horário', f.horario], ['Finalizaram', f.finalizou]];
+    return topo +
+      '<h2 class="sub">Por profissional</h2><div class="cartoes">' + cartoes + '</div><p class="nota">A previsão avulsa considera apenas atendimentos não recorrentes e não cancelados. Pacotes mensais ficam separados.</p>' +
+      '<h2 class="sub">Leituras estratégicas</h2><p class="mudo" style="margin:4px 0 0;font-size:14px">Serviços, horários, clientes e cancelamentos do período.</p>' +
+      '<div class="g-21" style="margin-top:14px"><div class="col">' +
+        '<section class="caixa"><h2>Funil de agendamento</h2>' + (f.acesso ? lista(etapas.map(function (x) { return { rot: x[0], q: x[1] }; })) + '<p class="mudo" style="margin:12px 0 0;font-size:14px">De cada 100 que abrem, <b style="color:var(--fg)">' + Math.round(100 * f.finalizou / f.acesso) + '</b> finalizam.</p>' : '<p class="mudo">Sem acessos registrados no período.</p>') + '</section>' +
+        '<section class="caixa"><h2>Horários mais usados</h2>' + lista(r.horarios) + '</section>' +
+        '<section class="caixa"><h2>Serviços mais pedidos</h2>' + lista(r.servicos) + '</section>' +
+        '<section class="caixa"><h2>Dias com mais volume</h2>' + lista(r.dias) + '</section></div>' +
+      '<div class="col"><section class="caixa principal-rel"><p class="mudo" style="margin:0;font-size:14px">Faturamento dos atendimentos</p><div class="num" style="font-size:40px;margin-top:10px">' + rs(r.faturamento) + '</div><p class="mudo" style="margin:12px 0 0;font-size:14px">Ainda por vir: <b style="color:var(--fg)">' + rs(r.previsao) + '</b> em ' + r.agendados + (r.agendados === 1 ? ' horário' : ' horários') + '</p></section>' +
+        '<section class="caixa">' + dl([['Total de agendamentos', r.total], ['Atendimentos feitos', r.atendimentos], ['Não compareceram', r.faltas], ['Cancelados', r.cancelados + ' (' + pct(r.taxa) + ')'], ['Avulsos', r.avulsos], ['Recorrentes', r.recorrentes], ['Ainda por vir', r.agendados]]) + '</section>' +
+        '<section class="caixa"><h2>Clientes que mais voltam</h2>' + (r.clientes.length ? '<ul class="lista">' + r.clientes.map(function (c) { return '<li><span>' + esc(c.nome) + '</span><span class="dir">' + c.n + 'x</span></li>'; }).join('') + '</ul>' : '<p class="mudo">Sem visitas no período.</p>') + '</section></div></div>';
+  }
+
+  /* ---------- ficha e mensagens ---------- */
+  var MSG = {
+    confirmar: function (h) { return 'Olá, ' + h.cli.split(' ')[0] + '! Seu horário na Ninja\'s está confirmado: ' + SEM[dt(h.dia).getDay()] + ', ' + dataCurta(h.dia) + ' às ' + hh(h.ini) + ', ' + h.svc.nome + ' com ' + pro(h.pro).nome.split(' ')[0] + '.'; },
+    lembrar: function (h) { return 'Oi, ' + h.cli.split(' ')[0] + '! Passando para lembrar do seu horário ' + (h.dia === HOJE ? 'hoje' : 'em ' + dataCurta(h.dia)) + ' às ' + hh(h.ini) + '. Rua Lara Campos, 740, Loja 4. Até lá!'; },
+    agradecer: function (h) { return 'Valeu pela visita, ' + h.cli.split(' ')[0] + '! Quando quiser marcar o próximo, é só tocar no link da agenda.'; },
+    parabens: function (c) { return 'Parabéns, ' + c.split(' ')[0] + '! A equipe da Ninja\'s deseja um ótimo aniversário. Seu próximo corte tem um mimo esperando por aqui.'; },
+    volta: function (c) { return 'Oi, ' + c.split(' ')[0] + '! Já faz um tempo desde o último corte. Quer que eu reserve um horário essa semana?'; },
+  };
+  function bolha(txt) { return '<div class="ag-zap"><p class="ag-zap-topo">Ninja\'s Barbershop<small>mensagem pronta, abre no WhatsApp</small></p><p class="ag-msg">' + esc(txt) + '</p></div>'; }
+  function abrirHorario(id) {
+    var h = null; prosVis().forEach(function (p) { agendaDe(st.dia, p).forEach(function (x) { if (x.id === id) h = x; }); });
+    if (!h) return;
+    var e = estado(h), c = historico()[h.cli];
+    ficha.innerHTML = '<div class="ficha"><header><div><h2>' + esc(h.cli) + '</h2><p>' + zap(h.cli) + (h.novo ? ' · <span class="etq">NOVO</span> marcou pelo site' : '') + '</p></div><button class="fechar" data-fechar aria-label="Fechar">×</button></header>' +
+      '<dl><div><dt>Horário</dt><dd>' + dataCurta(h.dia) + ', ' + hh(h.ini) + ' às ' + hh(h.fim) + '</dd></div><div><dt>Serviço</dt><dd>' + esc(h.svc.nome) + ' · ' + rs(h.svc.preco) + '</dd></div><div><dt>Profissional</dt><dd>' + esc(pro(h.pro).nome) + '</dd></div><div><dt>Histórico</dt><dd>' + (c ? c.visitas + ' visitas · ' + rs(c.gasto) : 'Primeira vez') + '</dd></div></dl>' +
+      '<div class="acoes">' + (e === 'marcado' || h.dia <= HOJE ? '<button class="bt" data-marcar="atendido" data-id="' + h.id + '">Atendido</button><button class="bt bt-mudo" data-marcar="faltou" data-id="' + h.id + '">Não compareceu</button>' : '') + '</div>' +
+      '<h3>Mensagens prontas</h3><div class="acoes">' + [['confirmar', 'Confirmar horário'], ['lembrar', 'Lembrar do horário'], ['agradecer', 'Agradecer']].map(function (m) { return '<button class="bt bt-mudo" data-previa="' + m[0] + '">' + m[1] + '</button>'; }).join('') + '</div><div data-previa-aqui>' + bolha(MSG[e === 'atendido' ? 'agradecer' : 'lembrar'](h)) + '</div></div>';
+    ficha._h = h; ficha.showModal();
+  }
+  function abrirMensagem(tipo, cli) {
+    var c = historico()[cli];
+    ficha.innerHTML = '<div class="ficha"><header><div><h2>' + esc(cli) + '</h2><p>' + zap(cli) + (c ? ' · ' + c.visitas + ' visitas, última em ' + dataCurta(c.ultima) : '') + '</p></div><button class="fechar" data-fechar aria-label="Fechar">×</button></header>' + bolha(MSG[tipo](cli)) + '<div class="acoes"><button class="bt" data-fechar>Abrir no WhatsApp</button></div></div>';
+    ficha.showModal();
+  }
+
+  /* ---------- eventos ---------- */
+  function render() { st.perfil ? casca() : entrada(); }
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest('button, tr[data-cli]'); if (!b) { if (ev.target === ficha) ficha.close(); return; }
+    var d = b.dataset;
+    if (d.entrar) { st.perfil = d.entrar; st.quem = 'eu'; render(); }
+    else if ('sair' in d) { st.perfil = null; render(); }
+    else if (d.aba) { st.aba = d.aba; render(); scrollTo(0, 0); }
+    else if (d.quem) { st.quem = d.quem; render(); }
+    else if (d.dia) { st.dia = d.dia; render(); }
+    else if (d.mes) { st.mes = new Date(st.mes.getFullYear(), st.mes.getMonth() + +d.mes, 1); render(); }
+    else if (d.periodo) { st.periodo = d.periodo; render(); }
+    else if (d.lem) { st.filtroLem = d.lem; render(); }
+    else if (d.h) abrirHorario(d.h);
+    else if (d.msg) abrirMensagem(d.msg, d.cli);
+    else if (d.cli && b.tagName === 'TR') abrirMensagem('volta', d.cli);
+    else if (d.previa) ficha.querySelector('[data-previa-aqui]').innerHTML = bolha(MSG[d.previa](ficha._h));
+    else if (d.marcar) { marcados[d.id] = d.marcar; hist = null; ficha.close(); render(); }
+    else if ('fechar' in d) ficha.close();
+    else if ('exportar' in d) {
+      var linhas = [['Data', 'Hora', 'Cliente', 'Serviço', 'Profissional', 'Valor']].concat(efetivadosFin().map(function (h) { return [dataCurta(h.dia), hh(h.ini), h.cli, h.svc.nome, pro(h.pro).nome, h.svc.preco]; }));
+      var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + linhas.map(function (l) { return l.join(';'); }).join('\n')], { type: 'text/csv' })); a.download = 'ninjas-financas.csv'; a.click();
+    }
+  });
+  document.addEventListener('input', function (ev) {
+    if (!ev.target.matches('[data-busca]')) return;
+    st.busca = ev.target.value; render();
+    var i = app.querySelector('[data-busca]'); i.focus(); i.setSelectionRange(i.value.length, i.value.length);
+  });
+  document.addEventListener('change', function (ev) { var k = ev.target.dataset.rel; if (k) { st.rel[k] = ev.target.value; render(); } });
+  st.rel.de = addDias(HOJE, -29); st.rel.ate = HOJE;
+  render();
+})();
+</script>
+</body>
+</html>
