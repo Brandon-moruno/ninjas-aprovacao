@@ -317,7 +317,7 @@
   function entrada() {
     app.innerHTML = '<main class="entrada"><div class="marca" data-logo-anim></div><h1>Quem está entrando?</h1><div class="perfis">' +
       D.equipe.map(function (p) { return '<button class="perfil" data-entrar="' + p.id + '">' + mono(p) + '<span><b>' + esc(p.nome) + '</b><small>' + esc(p.papel) + '</small></span></button>'; }).join('') +
-      '</div><p>Demonstração sem senha. Na versão final cada um entra com o próprio acesso.</p><p><a href="4-luz-de-led.html">Voltar ao site</a></p></main>';
+      '</div><p>Demonstração sem senha. Na versão final cada um entra com o próprio acesso.</p><p><a href="mockup-ninjas.html">Voltar ao site</a></p></main>';
     var s = document.createElement('script'); s.src = 'logo-anim.js'; document.body.appendChild(s);
   }
 
@@ -328,7 +328,7 @@
     var tela = { agenda: telaAgenda, clientes: telaClientes, lembretes: telaLembretes, financas: telaFinancas, relatorios: telaRelatorios }[st.aba]();
     app.innerHTML = '<div class="casca"><header class="cabeca">' + mono(eu) + '<div class="eu"><h1>Bem-vindo, ' + esc(eu.nome.split(' ')[0]) + '</h1><p>' + sub + '</p></div>' +
       (dono ? '<div class="pilulas">' + [['eu', 'Só eu'], ['todos', 'Barbearia']].map(function (q) { return '<button data-quem="' + q[0] + '" class="' + (st.quem === q[0] ? 'on' : '') + '">' + q[1] + '</button>'; }).join('') + '</div>' : '') +
-      '<div class="links"><button data-sair>Trocar perfil</button><a href="4-luz-de-led.html">Voltar ao site</a></div></header>' +
+      '<div class="links"><button data-sair>Trocar perfil</button><a href="mockup-ninjas.html">Voltar ao site</a></div></header>' +
       '<main class="conteudo">' + tela + '</main><p class="aviso-demo">Demonstração: clientes, valores e horários fictícios. Horários marcados pelo site aparecem com a marca NOVO.</p></div>' +
       '<nav class="abas" aria-label="Abas do painel">' + ABAS.map(function (a) { return '<button data-aba="' + a[0] + '" class="' + (st.aba === a[0] ? 'on' : '') + '">' + a[1] + '</button>'; }).join('') + '</nav>';
     var g = app.querySelector('.dia'); if (g) { var l = g.querySelector('.agora'); if (l) g.scrollTop = 0; }
